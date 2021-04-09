@@ -5,7 +5,11 @@
 #include <signal.h>
 #include <ctype.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/inotify.h>
 
+#define EVENT_STRUCT_SIZE sizeof(struct inotify_event)
+#define EVENT_BUFFER_SIZE (10 * (EVENT_STRUCT_SIZE + NAME_MAX + 1))
 sigjmp_buf state;
 
 void catch() {
@@ -30,16 +34,39 @@ int main() {
     char fname[269];
     char pname[256];
 
-    (void) signal(SIGSEGV, catch);
+    (void) signal(SIGINT, catch);
     if(sigsetjmp(state,1)) {
-        closedir(procfolder);
+        return 0;
+    }
+    int inotify_fd = inotify_init();
+    if(inotify_fd < 0) {
+        perror ("inotify_init");
+        return 1; // can't create the inotify fd, return 1 to os and exit
+    }
+    int watch_des = inotify_add_watch(inotify_fd, "/proc",IN_CREATE);
+    if(watch_des == -1) {
+        perror ("inotify_add_watch");
+        return 1; // can't create the watch descriptor, return 1 to os and exit
     }
 
-    procfolder = opendir("/proc/");
-    printf("A\n");
+    char buffer[EVENT_BUFFER_SIZE];
     while(1) {
+        int bytesRead = read(inotify_fd, buffer, EVENT_BUFFER_SIZE), bytesProcessed = 0;
+        if(bytesRead < 0) { // read error
+            perror("read");
+            return 1;
+        }
+        while(bytesProcessed < bytesRead) {
+            struct inotify_event* event = (struct inotify_event*)(buffer + bytesProcessed);
+            if (event->mask & IN_CREATE)
+                if (event->mask & IN_ISDIR)
+                    printf("%s IN_CREATE IN_ISDIR\n", event->name);
+            bytesProcessed += EVENT_STRUCT_SIZE + event->len;
+            }
+
+        /*
         procfile = 0;
-        
+        procfolder = opendir("/proc/");
         while(proc = readdir(procfolder)) {
             procfile++;
             snprintf(fname,sizeof(fname),"/proc/%s/status",proc->d_name);
@@ -53,7 +80,8 @@ int main() {
                 fclose(status);
             }
         }
-        //closedir(procfolder);
+        closedir(procfolder);
+        */
     }
     return 0;
 }
