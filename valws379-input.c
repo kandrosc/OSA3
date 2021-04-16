@@ -1,26 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
-
-int get_reference_size(char * line) {
-    int i;
-    char num_str[3];
-    for(i=0;i<strlen(line);i++) {
-        if(line[i] == 44) {
-            break;
-        }
-    }
-    num_str[0] = line[i+1];
-    if(line[i+2] >= 48 && line[i+2] <= 57) {
-        num_str[1] = line[i+2];
-        num_str[2] = '\0';
-    }
-    else {
-        num_str[1] = '\0';
-    }
-    return atoi(num_str);
-}
 
 // I = read, S = store, L = load, M = modify
 // https://www.cs.rutgers.edu/~pxk/416/notes/c-tutorials/pipe.html#:~:text=A%20pipe%20is%20a%20system,(stuff%20to%20be%20read)
@@ -28,7 +8,7 @@ int get_reference_size(char * line) {
 int main(int argc, char const *argv[]) {
     unsigned long long windowsize;
     long page_size;
-    long skipsize;
+    long skipsize = 0;
     char *endPtr;
     
     if(argc == 5) {
@@ -133,64 +113,15 @@ int main(int argc, char const *argv[]) {
 
     char prog[128];
     char cmd[256];
-    char line[1024];
-    char * line_ptr;
-    int reference_size;
-    int err;
-    FILE *fp;
-
-    unsigned long long w_counter = 0;
-    int p_counter = 0;
-
-    int num_windows = 0;
-    int num_pages = 0;
-
-    int skipline = 0; // Boolean flag that tells us we are skipping the line
 
     printf("Enter the name of the program that valgrind will run:\n");
     printf("valgrind --tool=lackey --trace-mem=yes ");
     scanf("%s",prog);
-    snprintf(cmd,sizeof(cmd),"valgrind --tool=lackey --trace-mem=yes %s 2>&1",prog);
+    snprintf(cmd,sizeof(cmd),"./process %lld %ld %ld %s > data.txt",windowsize,page_size,skipsize,prog);
 
-    
-    fp = popen(cmd,"r");
-    if (fp == NULL) {
-        printf("Failed to run valgrind\n");
-        return 1;
-    }
-    line_ptr = &line[0];
 
-    while(fgets(line,sizeof(line),fp) != NULL) {
-        for(int i=0;i<strlen(line);i++) {
-            if(line[i] == 61) {
-                skipline = 1;
-                break;
-            }
-        }
-        if(skipline == 1) {
-            skipline = 0;
-            continue;
-        }
-        reference_size = get_reference_size(line_ptr);
-        p_counter = p_counter + reference_size;
-        if(p_counter > page_size) {
-            p_counter = p_counter - page_size;
-            num_pages++;
-        }
-
-        w_counter = (w_counter + 1) % windowsize;
-        if(w_counter == 0) {
-            num_windows ++;
-            printf("%d,%d\n",num_windows,num_pages);
-            num_pages = 0;
-        }
-    }
-
-    err = pclose(fp);
-    if(err < 0) {
-        printf("Failed to close the file pointer\n");
-        return 1;
-    }
-    printf("Number of windows: %d\n",num_windows);
+    system(cmd);
+    system("python3 plot.py");
+    system("rm data.txt");
     return 0;
 }
