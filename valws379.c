@@ -39,6 +39,10 @@ int main(int argc, char const *argv[]) {
                     printf("Insufficient argument for <windowsize>: please enter a valid unsigned long long integer\n");
                     return 1;
                 }
+                if(windowsize < 1) {
+                    printf("Insufficient argument for <windowsize>: please enter a value greater than 0\n");
+                    return 1;
+                }
                 page_size = strtol(argv[4],&endPtr,10);
                 if(*endPtr) {
                     printf("Insufficient argument for <pagesize>: please enter an intger that is a power of 2 from 16 to 65536\n");
@@ -56,11 +60,19 @@ int main(int argc, char const *argv[]) {
                     printf("Insufficient argument for <skipsize>: please enter a valid intger\n");
                     return 1;
                 }
+                if(skipsize < 1) {
+                    printf("Insufficient argument for <skipsize>: please enter a value greater than 0\n");
+                    return 1;
+                }
             }
             else if(strcmp(argv[3],"-s") == 0) {
                 windowsize = strtoull(argv[1],&endPtr,10);
                 if(*endPtr) {
                     printf("Insufficient argument for <windowsize>: please enter a valid unsigned long long integer\n");
+                    return 1;
+                }
+                if(windowsize < 1) {
+                    printf("Insufficient argument for <windowsize>: please enter a value greater than 0\n");
                     return 1;
                 }
                 page_size = strtol(argv[2],&endPtr,10);
@@ -80,6 +92,10 @@ int main(int argc, char const *argv[]) {
                     printf("Insufficient argument for <skipsize>: please enter a valid intger\n");
                     return 1;
                 }
+                if(skipsize < 1) {
+                    printf("Insufficient argument for <skipsize>: please enter a value greater than 0\n");
+                    return 1;
+                }
             }
         }
         else {
@@ -91,6 +107,10 @@ int main(int argc, char const *argv[]) {
         windowsize = strtoull(argv[1],&endPtr,10);
         if(*endPtr) {
             printf("Insufficient argument for <windowsize>: please enter a valid unsigned long long integer\n");
+            return 1;
+        }
+        if(windowsize < 1) {
+            printf("Insufficient argument for <windowsize>: please enter a value greater than 0\n");
             return 1;
         }
         page_size = strtol(argv[2],&endPtr,10);
