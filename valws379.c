@@ -32,7 +32,7 @@ int main(int argc, char const *argv[]) {
     char *endPtr;
     
     if(argc == 5) {
-        if((argv[1] == "-s" || argv[3] == "-s") && !(argv[1] == "-s" || argv[3] == "-s")) {
+        if((strcmp(argv[1],"-s") == 0 || strcmp(argv[3],"-s") == 0 ) && !(strcmp(argv[1],"-s") == 0 && strcmp(argv[3],"-s") == 0)  ) {
             if(strcmp(argv[1],"-s") == 0) {
                 windowsize = strtoull(argv[3],&endPtr,10);
                 if(*endPtr) {
@@ -53,7 +53,7 @@ int main(int argc, char const *argv[]) {
                 }
                 skipsize = strtol(argv[2],&endPtr,10);
                 if(*endPtr) {
-                    printf("Insufficient argument for <pagesize>: please enter a valid intger\n");
+                    printf("Insufficient argument for <skipsize>: please enter a valid intger\n");
                     return 1;
                 }
             }
@@ -77,7 +77,7 @@ int main(int argc, char const *argv[]) {
                 }
                 skipsize = strtol(argv[4],&endPtr,10);
                 if(*endPtr) {
-                    printf("Insufficient argument for <pagesize>: please enter a valid intger\n");
+                    printf("Insufficient argument for <skipsize>: please enter a valid intger\n");
                     return 1;
                 }
             }
